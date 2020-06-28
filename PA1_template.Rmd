@@ -1,25 +1,107 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Untitled"
+author: "JLGRIECO"
+date: "6/28/2020"
+output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
-## Loading and preprocessing the data
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r, echo=TRUE}
+library(tidyverse)
+library(janitor)
+setwd("C:/users/justin/Documents/R/repdata_data_activity")
+data <- read_csv("activity.csv", guess_max=10000)
+
+step_by_day <- data %>%
+  select(date,steps) %>%
+  group_by(date) %>%
+  summarize(Total_step = sum(steps)) %>%
+  na.omit()
+
+View(step_by_day)
+hist(step_by_day$Total_step, xlab = "Total Steps By Day", ylab = "Frequency of Steps", main = "Total Steps", col = "blue", breaks = 25)
+
+```
+###Mean and Median
+mean(step_by_day$Total_step)
+median(step_by_day$Total_step)
+
+```
+
+```
+#Time Series
+databytime <- data %>%
+  select(interval, steps) %>%
+  na.omit() %>%
+  group_by(interval) %>%
+  summarize(total_steps = mean(steps))
+  
+ggplot(databytime, aes(interval, total_steps)) +geom_line()
+
+###5 min interval, with maximum number of steps
+databytime[which(databytime$total_steps == max(databytime$total_steps)),]
+```
+```
+
+```
+#Input Missing Values
+missing_data <- sum(is.na(data$steps))
+
+#How to substitute missing values
+replacewithmean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
+meandata <- data%>% 
+  group_by(interval) %>% 
+  mutate(steps= replacewithmean(steps))
+
+head(meandata)
+```
+
+```
+#New Histogram ot Steps with Mean/Median per day
+names(Full_Data)[1] = "data"
+names(Full_Data)[2] = "total_steps"
+
+summary(Full_Data)
+
+hist(Full_Data$total_steps, xlab = "steps", ylab = "frequency of steps", main = "Total Daily Steps", breaks = 15, col="blue"
+)
+```
+
+```
+### Compare old mean with new mean
+oldmean <- mean(step_by_day$Total_step, na.rm=TRUE)
+newmean <- mean(Full_Data$total_steps)
+
+### Old and New Median
+oldmedian <- median(step_by_day$Total_step, na.rm=TRUE)
+newmedian <- median(Full_Data$total_steps)
+
+```
+
+```
+#Differences between weekends and weekdays?
+meandata$date <- as.Date(meandata$date)
+meandata$weekday <- weekdays(meandata$date)
+meandata$weekend <- ifelse(meandata$weekday =="Saturday" | meandata$weekday == "Sunday", "Weekend", "Weekday")
+
+meandataweekendweekday <- aggregate(meandata$steps , by= list(meandata$weekend, meandata$interval), na.omit(mean))
+names(meandataweekendweekday) <- c("weekend", "interval", "steps")
+
+ggplot(meandataweekendweekday, aes(x=interval, y=steps, color=weekend)) + geom_line()+
+facet_grid(weekend ~.) + xlab("Interval") + ylab("Mean of Steps") +
+    ggtitle("Comparison of Average Number of Steps in Each Interval")
+```
 
 
 
-## What is mean total number of steps taken per day?
 
 
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
